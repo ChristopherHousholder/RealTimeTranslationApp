@@ -1,42 +1,36 @@
 import speech_recognition as sr
 from langdetect import detect, DetectorFactory
 
-# Set seed for consistent language detection
+# Set seed for consistent language detection results
 DetectorFactory.seed = 0
 
-def continuous_speech_recognition():
+def recognize_speech():
     """
-    Continuously listens to speech, transcribes it per word,
-    and detects the spoken language dynamically.
+    Captures audio from the microphone, detects the spoken language, 
+    and converts the speech into text automatically.
     """
     recognizer = sr.Recognizer()
     
     with sr.Microphone() as source:
-        print("Listening... Speak now (Press Ctrl+C to stop)")
+        print("Listening... Speak now:")
         recognizer.adjust_for_ambient_noise(source)  # Adjust for background noise
+        audio = recognizer.listen(source)  # Listen for input
+        
+        try:
+            # Recognize speech without specifying a language (Google auto-detects)
+            text = recognizer.recognize_google(audio)  # Auto-detect language
+            detected_lang = detect(text)  # Detect the language from the text
 
-        while True:
-            try:
-                # Listen for a small chunk of speech
-                audio = recognizer.listen(source, phrase_time_limit=1)  # Capture short segments
-                
-                # Recognize speech
-                text = recognizer.recognize_google(audio)  # Auto-detect language
-                
-                # Detect the language
-                detected_lang = detect(text)
-                
-                print(f"[{detected_lang.upper()}] {text}")
-            
-            except sr.UnknownValueError:
-                print("[...] (Listening...)")  # Indicate waiting for input
-            except sr.RequestError:
-                print("Could not request results. Check your internet connection.")
-                break  # Exit loop on network failure
+            print(f"Detected Language: {detected_lang.upper()}")
+            print(f"Transcribed Text: {text}")
+            return detected_lang, text
+        
+        except sr.UnknownValueError:
+            print("Sorry, I couldn't understand the audio.")
+            return None, None
+        except sr.RequestError:
+            print("Could not request results. Check your internet connection.")
+            return None, None
 
 if __name__ == "__main__":
-    try:
-        continuous_speech_recognition()
-    except KeyboardInterrupt:
-        print("\nExiting... Goodbye!")
-
+    recognize_speech()
