@@ -34,11 +34,3 @@ class BufferedTTS:
     def finish(self):
         if self.flush_timer is not None:
             self.flush_timer.join()
-
-if __name__ == "__main__":
-    tts = BufferedTTS(rate=200, buffer_delay=0.1)
-    words = ["hello", "world", "this", "is", "a", "rapid", "test", "of", "continuous", "speech"]
-    for w in words:
-        tts.speak_word(w)
-        time.sleep(0.05)
-    tts.finish()

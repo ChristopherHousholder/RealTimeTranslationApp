@@ -1,15 +1,10 @@
 import os
 import pyaudio
 from google.cloud import speech
-from TextToAudio import TTS
+from TextToAudio import BufferedTTS
 import time
 
-tts = TTS(rate=200, buffer_delay=0.1)
-
-
-
-
-
+tts = BufferedTTS(rate=200, buffer_delay=0.1)
 
 language_code = input("Enter language code (e.g., en-US, es-ES, fr-FR): ").strip() #Language Code
 
