@@ -1,36 +1,33 @@
 import pyttsx3
 import threading
+import queue
 import time
 
-class BufferedTTS:
-    def __init__(self, rate=200, buffer_delay=0.1):
-        self.engine = pyttsx3.init()
-        self.engine.setProperty('rate', rate)
-        self.buffer_delay = buffer_delay
-        self.words_buffer = []
-        self.buffer_lock = threading.Lock()
-        self.flush_timer = None
-
-    def flush_buffer(self):
-        with self.buffer_lock:
-            if self.words_buffer:
-                text = ' '.join(self.words_buffer)
-                self.words_buffer.clear()
-            else:
-                text = None
-        if text:
-            self.engine.say(text)
-            self.engine.runAndWait()
-        self.flush_timer = None
-
+class RealTimeTTS:
+    def __init__(self, rate=200):
+        self.rate = rate
+        self.queue = queue.Queue()
+        self.worker = threading.Thread(target=self._worker, daemon=True)
+        self.worker.start()
+    
+    def _worker(self):
+        while True:
+            word = self.queue.get()
+            if word is None:
+                break
+            engine = pyttsx3.init()
+            engine.setProperty('rate', self.rate)
+            engine.say(word)
+            engine.runAndWait()
+            engine.stop()
+            self.queue.task_done()
+    
     def speak_word(self, word):
-        with self.buffer_lock:
-            self.words_buffer.append(word)
-        if self.flush_timer is not None:
-            self.flush_timer.cancel()
-        self.flush_timer = threading.Timer(self.buffer_delay, self.flush_buffer)
-        self.flush_timer.start()
-
+        self.queue.put(word)
+    
     def finish(self):
-        if self.flush_timer is not None:
-            self.flush_timer.join()
+        self.queue.join()
+    
+    def shutdown(self):
+        self.queue.put(None)
+        self.worker.join()
