@@ -1,17 +1,44 @@
 import pyttsx3
+import threading
+import time
 
-def text_to_speech(text):
-    # Initialize the text-to-speech engine
-    engine = pyttsx3.init()
+class BufferedTTS:
+    def __init__(self, rate=200, buffer_delay=0.1):
+        self.engine = pyttsx3.init()
+        self.engine.setProperty('rate', rate)
+        self.buffer_delay = buffer_delay
+        self.words_buffer = []
+        self.buffer_lock = threading.Lock()
+        self.flush_timer = None
 
-    # Set properties (optional)
-    engine.setProperty('rate', 150)  # Speed of speech
-    engine.setProperty('volume', 1)  # Volume level (0.0 to 1.0)
+    def flush_buffer(self):
+        with self.buffer_lock:
+            if self.words_buffer:
+                text = ' '.join(self.words_buffer)
+                self.words_buffer.clear()
+            else:
+                text = None
+        if text:
+            self.engine.say(text)
+            self.engine.runAndWait()
+        self.flush_timer = None
 
-    # Speak the text
-    engine.say(text)
-    engine.runAndWait()
+    def speak_word(self, word):
+        with self.buffer_lock:
+            self.words_buffer.append(word)
+        if self.flush_timer is not None:
+            self.flush_timer.cancel()
+        self.flush_timer = threading.Timer(self.buffer_delay, self.flush_buffer)
+        self.flush_timer.start()
+
+    def finish(self):
+        if self.flush_timer is not None:
+            self.flush_timer.join()
 
 if __name__ == "__main__":
-    user_text = input("Enter text to convert to speech: ")
-    text_to_speech(user_text)
+    tts = BufferedTTS(rate=200, buffer_delay=0.1)
+    words = ["hello", "world", "this", "is", "a", "rapid", "test", "of", "continuous", "speech"]
+    for w in words:
+        tts.speak_word(w)
+        time.sleep(0.05)
+    tts.finish()

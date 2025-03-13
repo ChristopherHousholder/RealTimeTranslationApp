@@ -1,6 +1,15 @@
 import os
 import pyaudio
 from google.cloud import speech
+from TextToAudio import TTS
+import time
+
+tts = TTS(rate=200, buffer_delay=0.1)
+
+
+
+
+
 
 language_code = input("Enter language code (e.g., en-US, es-ES, fr-FR): ").strip() #Language Code
 
@@ -51,6 +60,7 @@ def streamAudio():
             if len(current_words) > len(printed_words):
                 new_words = current_words[len(printed_words):]
                 for word in new_words:
+                    tts.speak_word(word)
                     print(word)
                 printed_words = current_words
             if result.is_final:
