@@ -1,33 +1,52 @@
-import pyttsx3
-import threading
-import queue
-import time
+import pyaudio
+from google.cloud import texttospeech
 
-class RealTimeTTS:
-    def __init__(self, rate=200):
-        self.rate = rate
-        self.queue = queue.Queue()
-        self.worker = threading.Thread(target=self._worker, daemon=True)
-        self.worker.start()
+class TextToAudio:
+    def __init__(self, credentials, sample_rate=16000, channels=1):
+        """
+        Manages calling Google Text-to-Speech for single words
+        and playing them out loud (raw PCM) via PyAudio.
+        :param credentials: Google service account Credentials object.
+        :param sample_rate: Playback sample rate (Hz).
+        :param channels: number of output channels (1 for mono).
+        """
+        self.tts_client = texttospeech.TextToSpeechClient(credentials=credentials)
+        self.sample_rate = sample_rate
+        self.channels = channels
+
+        # Set up PyAudio for speaker/headphone output
+        self.p = pyaudio.PyAudio()
+        self.output_stream = self.p.open(
+            format=pyaudio.paInt16,
+            channels=self.channels,
+            rate=self.sample_rate,
+            output=True
+        )
+
+    def speak_word(self, word: str):
+        """
+        Calls Google TTS on a single 'word' (or short phrase),
+        then plays the result out loud immediately (no file saving).
+        """
+        synthesis_input = texttospeech.SynthesisInput(text=word)
+
+        voice_params = texttospeech.VoiceSelectionParams(
+            language_code="en-US",   # Hard-coded TTS language for demo
+            name="en-US-Wavenet-D"
+        )
+        audio_config = texttospeech.AudioConfig(
+            audio_encoding=texttospeech.AudioEncoding.LINEAR16,
+            sample_rate_hertz=self.sample_rate
+        )
+
+        # Perform the TTS request
+        response = self.tts_client.synthesize_speech(
+            input=synthesis_input,
+            voice=voice_params,
+            audio_config=audio_config
+        )
+
+        # Play the raw PCM data
+        raw_audio = response.audio_content
+        self.output_stream.write(raw_audio)
     
-    def _worker(self):
-        while True:
-            word = self.queue.get()
-            if word is None:
-                break
-            engine = pyttsx3.init()
-            engine.setProperty('rate', self.rate)
-            engine.say(word)
-            engine.runAndWait()
-            engine.stop()
-            self.queue.task_done()
-    
-    def speak_word(self, word):
-        self.queue.put(word)
-    
-    def finish(self):
-        self.queue.join()
-    
-    def shutdown(self):
-        self.queue.put(None)
-        self.worker.join()
