@@ -1,3 +1,9 @@
+package com.samanthamalca.translatorapp
+
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -14,6 +20,7 @@ import com.samanthamalca.translatorapp.components.BottomTextField
 import com.samanthamalca.translatorapp.components.CustomTopMenu
 import com.samanthamalca.translatorapp.components.PulsatingWaves
 import com.samanthamalca.translatorapp.components.ShazamScreenEffect
+import com.samanthamalca.translatorapp.ui.theme.TranslatorAppTheme
 
 @Composable
 fun MyScreen() {
@@ -50,5 +57,17 @@ fun MyScreen() {
 
         // Bottom text field
         BottomTextField()
+    }
+}
+
+class MainActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
+        setContent {
+            TranslatorAppTheme {
+                MyScreen()
+            }
+        }
     }
 }
