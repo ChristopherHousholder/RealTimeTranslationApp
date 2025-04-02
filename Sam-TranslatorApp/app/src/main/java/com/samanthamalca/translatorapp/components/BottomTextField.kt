@@ -20,7 +20,9 @@ fun BottomTextField() {
     var text by remember { mutableStateOf("") }
 
     Box(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(bottom = 150.dp), // This moves the field up from the bottom
         contentAlignment = Alignment.BottomCenter
     ) {
         OutlinedTextField(
@@ -28,14 +30,13 @@ fun BottomTextField() {
             onValueChange = { newText -> text = newText },
             label = { Text("Enter text", color = Color.White) },
             textStyle = TextStyle(color = Color.White),
-            // Request no auto-correct / suggestions
             keyboardOptions = KeyboardOptions(
                 autoCorrect = false,
                 imeAction = ImeAction.Done
             ),
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp)
+                .padding(horizontal = 16.dp)
         )
     }
 }

@@ -1,55 +1,100 @@
 package com.samanthamalca.translatorapp.components
 
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.launch
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun CustomTopMenu(onMenuClick: () -> Unit) {
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+    val scope = rememberCoroutineScope()
+
+    ModalNavigationDrawer(
+        drawerState = drawerState,
+        drawerContent = {
+            DrawerContent(onClose = { scope.launch { drawerState.close() } })
+        }
+    ) {
+        // Main Screen Content (your home page design)
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black)
+        ) {
+            // Optional top menu (just the hamburger icon)
+            Box(
+                modifier = Modifier.fillMaxWidth(),
+                contentAlignment = Alignment.TopEnd
+            ) {
+                IconButton(onClick = { scope.launch { drawerState.open() } }) {
+                    Icon(Icons.Default.Person, contentDescription = "Menu", tint = Color.White)
+                }
+            }
+
+            // Centered circular "button"
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularDesign() // Your circular button here
+            }
+
+            // Optional bottom text
+            BottomTextField()
+        }
+    }
+}
 
 @Composable
-fun CustomTopMenu(onClick: () -> Unit) {
-    var isMenuOpen by remember { mutableStateOf(false) }
-
-    // Animate rotation for the "X" effect
-    val rotation by animateFloatAsState(
-        targetValue = if (isMenuOpen) 45f else 0f,
-        animationSpec = tween(durationMillis = 300), label = "rotation"
-    )
-
-    Canvas(
+fun DrawerContent(onClose: () -> Unit) {
+    Column(
         modifier = Modifier
-            .size(50.dp)
-            .padding(8.dp)
-            .clickable {
-                isMenuOpen = !isMenuOpen
-                onClick()
-            }
-            .graphicsLayer {
-                rotationZ = rotation
-            }
+            .fillMaxHeight()
+            .width(280.dp)
+            .background(Color(0xFF15202B)) // Dark theme color
+            .padding(16.dp),
+        horizontalAlignment = Alignment.Start
     ) {
-        val lineWidth = size.width * 0.9f
-        val lineSpacing = size.height / 4
-        val totalHeight = (2 * lineSpacing) + (4.dp.toPx() * 2)
-        val startY = (size.height - totalHeight) / 2
+        // Menu Items
+        DrawerItem(icon = Icons.Default.Home, text = "Home", onClick = onClose)
+        DrawerItem(icon = Icons.Default.Person, text = "Profile", onClick = onClose)
+        DrawerItem(icon = Icons.Default.Settings, text = "Settings", onClick = onClose)
 
-        for (i in 0..2) {
-            val y = startY + i * lineSpacing
-            drawLine(
-                color = Color.White,
-                start = Offset(0f, y),
-                end = Offset(lineWidth, y),
-                strokeWidth = 4.dp.toPx(),
-                cap = StrokeCap.Round
-            )
-        }
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // Languages Section
+        Text(text = "Languages:", color = Color.White, style = MaterialTheme.typography.bodyLarge)
+        Spacer(modifier = Modifier.height(8.dp))
+        DrawerItem(icon = Icons.Default.Home, text = "English", onClick = onClose)
+        DrawerItem(icon = Icons.Default.Home, text = "Spanish", onClick = onClose)
+    }
+}
+
+@Composable
+fun DrawerItem(icon: androidx.compose.ui.graphics.vector.ImageVector, text: String, onClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(12.dp)
+            .clickable { onClick() },
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(icon, contentDescription = text, tint = Color.White)
+        Spacer(modifier = Modifier.width(12.dp))
+        Text(text, color = Color.White, style = MaterialTheme.typography.bodyLarge)
     }
 }
